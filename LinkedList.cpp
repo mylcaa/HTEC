@@ -1,56 +1,75 @@
 #include <iostream>
 #include <memory>
+#include <cassert>
+#include <initializer_list>
+
+template<typename T>
+struct Node{
+    std::shared_ptr<Node<T>> next{};
+    T value{};
+}; 
 
 template <typename T>
 class LinkedList{
     private:
-        std::shared_ptr<LinkedList<T>> next{};
-        T value{};
+        std::shared_ptr<Node<T>> head{};
     public:
-        LinkedList(std::shared_ptr<LinkedList<T>> smart_ptr = nullptr, T vvalue = 0)
+        LinkedList(int size = 0)                               //init through size of list
         {
-            next = smart_ptr;
-            value = vvalue;
-            std::cout << "created: " << value << '\n';
+            assert(size >= 0 && "Error: size must be positive");
+             
+            std::shared_ptr<Node<T>> head_copy{};        
+            
+            for(int i = 0; i < size; ++i){
+                std::shared_ptr<Node<T>> temp{new Node<T>{}}; //make a node and connect it to a smart ptr
+                
+                if(i == 0){
+                    head = temp;                               //setup head_ptr on the first iteration
+                    head_copy = head;                          //and initialize helper ptr with first node
+                }else{
+                    (*head_copy).next = temp;                  //else connect the current and previous node    
+                    head_copy = temp;                          //move the knitting ptr along the list
+                }
+            }
         }
 
-        ~LinkedList(){
-            std::cout << value << " destroyed\n";  
+        LinkedList(std::initializer_list<T> args)              //init through initializer list
+        {   
+            std::shared_ptr<Node<T>> head_copy{};              //make a helper ptr to use in for loop
+
+            for(size_t i = 0; i < args.size(); ++i){
+                std::shared_ptr<Node<T>> temp{new Node<T>{}};  //make a node and connect it to a temp ptr
+
+                if(i == 0){
+                    head = temp;                               //setup head_ptr on the first iteration
+                    head_copy = head;                          //and initialize helper ptr with first node
+                }else{
+                    (*head_copy).next = temp;                  //else connect the current and previous node    
+                    head_copy = temp;                          //move the knitting ptr along the list
+                }
+                
+                (*head_copy).value = args.begin()[i];
+            }
         }
 
-        void setValue(T vvalue){value = vvalue;}
-        void setPtr(std::shared_ptr<LinkedList<T>> smart_ptr){next = smart_ptr;}
+        //helper test function
+        void printLinkedList(){
+            std::shared_ptr<Node<T>> head_copy = head;
 
-        T getValue() const {return value;}
-        std::shared_ptr<LinkedList<T>> getPtr() const {return next;}
+            while(head_copy != nullptr){
+                std::cout << (*head_copy).value << " ";
+                head_copy = (*head_copy).next;
+            }
+            std::cout << '\n';
+        }
 
 };
 
-//helper test function 
-template<typename T>
-void printLinkedList(std::shared_ptr<LinkedList<T>> head){
-
-    while(head != nullptr){
-        std::cout << (*head).getValue() << " ";
-        head = (*head).getPtr();
-    }
-    std::cout << '\n';
-}
 
 int main(){
 
-    std::shared_ptr<LinkedList<int>> head{new LinkedList<int>{nullptr, 0}};
-    std::shared_ptr<LinkedList<int>> head_copy = head;
-
-    for(int i = 1; i < 10; ++i){
-        //make node and connect it to a smart ptr
-        std::shared_ptr<LinkedList<int>> temp{new LinkedList<int>{nullptr, i}};
-        //give that smart ptr to the previous node's ptr => connect the current and previous node
-        (*head_copy).setPtr(temp);
-        head_copy = temp;
-    }
-
-    printLinkedList(head);
+    LinkedList<int> l{1, 4, 5, 7};
+    l.printLinkedList();
 
     return 0;
 }
