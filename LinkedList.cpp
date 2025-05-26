@@ -29,10 +29,6 @@ class Node{
         value{value}, 
         next{next}
         {}
-
-        ~Node(){
-            std::cout << "destroyed node: " << value << '\n';
-        }
 };
 
 template <typename T>
@@ -78,9 +74,6 @@ class LinkedList{
 
                 if(i == 0){
                     head = temp;                                               //set head_ptr on the first iteration
-                }
-
-                if(i == 0){
                     head_copy = head;                                          //initialize helper ptr on the first iteration
                 }else{
                     (*head_copy).next = temp;                                  //connect the current and previous node    
@@ -136,7 +129,6 @@ class LinkedList{
             tail.reset();
             head.reset();
             size = 0;
-
         }
 
         //helper test function
