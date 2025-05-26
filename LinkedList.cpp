@@ -20,10 +20,20 @@ struct type_sifting<float>{
 };
 
 template<typename T>
-struct Node{
-    std::shared_ptr<Node<T>> next{};
-    T value{};
-}; 
+class Node{
+    public:
+        T value{};
+        std::shared_ptr<Node<T>> next{};
+    public:
+        Node(T value = 0, std::shared_ptr<Node<T>> next = nullptr) : 
+        value{value}, 
+        next{next}
+        {}
+
+        ~Node(){
+            std::cout << "destroyed node: " << value << '\n';
+        }
+};
 
 template <typename T>
 class LinkedList{
@@ -31,43 +41,102 @@ class LinkedList{
     
     private:
         std::shared_ptr<Node<T>> head{};
+        std::shared_ptr<Node<T>> tail{};
+        int size{};
     public:
-        LinkedList(int size = 0)                               //init through size of list
+        LinkedList(const int size = 0):                                        //init through size of list
+        size{size}
         {
             assert(size >= 0 && "Error: size must be positive");
              
             std::shared_ptr<Node<T>> head_copy{};        
-            
+
             for(int i = 0; i < size; ++i){
-                std::shared_ptr<Node<T>> temp{new Node<T>{}}; //make a node and connect it to a smart ptr
+                std::shared_ptr<Node<T>> temp{new Node<T>{}};                  //make a node and connect it to a smart ptr
                 
                 if(i == 0){
-                    head = temp;                               //setup head_ptr on the first iteration
-                    head_copy = head;                          //and initialize helper ptr with first node
+                    head = temp;                                               //setup head_ptr on the first iteration
+                    head_copy = head;                                          //and initialize helper ptr with first node
                 }else{
-                    (*head_copy).next = temp;                  //else connect the current and previous node    
-                    head_copy = temp;                          //move the knitting ptr along the list
+                    (*head_copy).next = temp;                                  //else connect the current and previous node    
+                    head_copy = temp;                                          //move the knitting ptr along the list
+                }
+
+                if(i == size-1){
+                    tail = head_copy;                                          //if you're at the end of the list set the tail ptr
                 }
             }
         }
 
-        LinkedList(std::initializer_list<T> args)              //init through initializer list
+        LinkedList(std::initializer_list<T> args):                             //init through initializer list
+        size{static_cast<int>(args.size())}
         {   
-           std::shared_ptr<Node<T>> head_copy{};              //make a helper ptr to use in for loop
+            std::shared_ptr<Node<T>> head_copy{};                              //make a helper ptr to use in for loop
 
             for(size_t i = 0; i < args.size(); ++i){
-                std::shared_ptr<Node<T>> temp{new Node<T>{}};  //make a node and connect it to a temp ptr
+                std::shared_ptr<Node<T>> temp{new Node<T>{args.begin()[i]}};   //make a node and connect it to a temp ptr
 
                 if(i == 0){
-                    head = temp;                               //setup head_ptr on the first iteration
-                    head_copy = head;                          //and initialize helper ptr with first node
-                }else{
-                    (*head_copy).next = temp;                  //else connect the current and previous node    
-                    head_copy = temp;                          //move the knitting ptr along the list
+                    head = temp;                                               //set head_ptr on the first iteration
                 }
-                
-                (*head_copy).value = args.begin()[i];
+
+                if(i == 0){
+                    head_copy = head;                                          //initialize helper ptr on the first iteration
+                }else{
+                    (*head_copy).next = temp;                                  //connect the current and previous node    
+                    head_copy = temp;                                          //move the knitting ptr along the list
+                }
+
+                if(i == args.size()-1){
+                    tail = head_copy;                                          //set tail_ptr on the last iteration
+                }
             }
+        }
+
+        void push_back(T value){
+            std::shared_ptr<Node<T>> temp{new Node<T>{value}};
+
+            if(size != 0){
+                (*tail).next = temp;
+                tail = temp;
+                size++;
+            }else{
+                head = temp;
+                tail = temp;
+            }
+        }
+
+        void insert(T value, const int position){
+            assert(position <= size && "Position out of bounds");
+
+            if(position == size){                                              //trivial case pos = end of list
+                this->push_back(value);
+                return;
+            }
+
+            std::shared_ptr<Node<T>> position_ptr{new Node<T>{value}};
+            
+            if(position == 0){                                                 //trivial case pos = beginning of list
+                position_ptr->next = head;
+                head = position_ptr;
+                return;    
+            }
+
+            std::shared_ptr<Node<T>> trail = head;
+            position_ptr->next = head->next;
+
+            for(int i = 1; i < position; ++i){
+                position_ptr->next = position_ptr->next->next;
+                trail = trail->next;
+            }
+            trail->next = position_ptr;
+        }
+
+        void clear(){
+            tail.reset();
+            head.reset();
+            size = 0;
+
         }
 
         //helper test function
@@ -86,7 +155,14 @@ class LinkedList{
 
 int main(){
 
-    LinkedList<int> l{1, 4, 5, 7};
+    LinkedList<int> l{1, 2, 3, 4, 5, 6};
+    l.insert(0, 4);
+    l.printLinkedList();
+    
+    l.clear();
+    l.printLinkedList();
+    
+    l.push_back(6);
     l.printLinkedList();
 
     return 0;
