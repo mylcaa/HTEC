@@ -3,6 +3,22 @@
 #include <cassert>
 #include <initializer_list>
 
+//limiting the type of LinkedList through template specialization of struct type_sifting
+template<typename T>
+struct type_sifting{
+    static const bool value = false;
+};
+
+template<>
+struct type_sifting<int>{
+    static const bool value = true;
+};
+
+template<>
+struct type_sifting<float>{
+    static const bool value = true;
+};
+
 template<typename T>
 struct Node{
     std::shared_ptr<Node<T>> next{};
@@ -11,6 +27,8 @@ struct Node{
 
 template <typename T>
 class LinkedList{
+    static_assert(type_sifting<T>::value, "List type must be int or float");
+    
     private:
         std::shared_ptr<Node<T>> head{};
     public:
@@ -35,7 +53,7 @@ class LinkedList{
 
         LinkedList(std::initializer_list<T> args)              //init through initializer list
         {   
-            std::shared_ptr<Node<T>> head_copy{};              //make a helper ptr to use in for loop
+           std::shared_ptr<Node<T>> head_copy{};              //make a helper ptr to use in for loop
 
             for(size_t i = 0; i < args.size(); ++i){
                 std::shared_ptr<Node<T>> temp{new Node<T>{}};  //make a node and connect it to a temp ptr
